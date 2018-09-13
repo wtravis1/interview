@@ -49,6 +49,7 @@ larger numbers for testing.
 */
 
 func exploreRoad(r *Road, c chan struct{}, wg *sync.WaitGroup) {
+	fmt.Println("In exploreRoad")
 	defer wg.Done()
 	if r != nil {
 		c <- struct{}{}
@@ -60,6 +61,7 @@ func exploreRoad(r *Road, c chan struct{}, wg *sync.WaitGroup) {
 }
 
 func (city *City) verifyRoads(numRoads int) {
+	fmt.Println("In verifyRoads")
 	wg := sync.WaitGroup{}
 	c := make(chan struct{}, numRoads)
 	wg.Add(1)
@@ -85,10 +87,12 @@ func timer() {
 }
 
 func main() {
+	fmt.Println("In Main")
 	start := time.Now()
 	rand.Seed(start.Unix())
 	go timer()
-	numRoads := (rand.Int() % 1000000) + 1000000
+	// numRoads := (rand.Int() % 10) + 10
+	numRoads := 5
 	city := makeRandomCity(numRoads)
 	city.verifyRoads(numRoads)
 	fmt.Printf("Time taken : %s\n", time.Since(start))

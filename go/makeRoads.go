@@ -18,23 +18,30 @@ import (
 // Hints:
 // - A linter might help, but there are some syntax erros here as well
 // - Road instantiation doesn't appear to be working. What could be the reason for that?
-func (r *Road) MakeRoad(c chan struct{}, wg *sync.WaitGroup) {
+func (r *Road) MakeRoad(c chan int, wg *sync.WaitGroup) {
+	// fmt.Println("In MakeRoad")
 	// release from the waitgroup later
 	defer wg.Done()
 	// if we can pull of the channel we have more roads to generate
 	select {
-	case <-c:
-	default:
-		return
+	case _, ok := <- c:
+			if ok == false {
+				return
+			}
+		default:
+			return
 	}
+
 	// we create the new road
-	r = new(Road)
-	*r = Road{name: RandName()}
+	//r = new(Road)
+	r = &Road{name: RandName()}
+	fmt.Println(*r)
 	// and move forward, further into the city
 	wg.Add(3)
-	go r.left.MakeRoad(c, &wg)
-	go r.right.MakeRoad(c, &wg)
-	go r.straight.MakeRoad(c, &wg)
+	go r.left.MakeRoad(c, wg)
+	go r.right.MakeRoad(c, wg)
+	go r.straight.MakeRoad(c, wg)
+
 }
 
 // makeRandomCity operates sort of like the wrapper function to MakeRoad. We make the entry point, populate the channel for road creation tracking, and unleash the MakeRoad function
@@ -42,13 +49,15 @@ func (r *Road) MakeRoad(c chan struct{}, wg *sync.WaitGroup) {
 func makeRandomCity(numRoads int) (city *City) {
 	fmt.Println("Number of roads in automatically generated city : " + strconv.Itoa(numRoads))
 	// create a channel with the size of numRoads (and population of numRoads) for tracking purposes
-	c := make(chan struct{}, numRoads)
+	c := make(chan int, numRoads)
 	for i := 0; i < numRoads; i++ {
-		c <- struct{}{}
+		// fmt.Println(strconv.Itoa(i))
+		c <- i
 	}
 	close(c)
 	// we create the entrypoint into the city
 	r := &Road{name: "entry"}
+	r.left = &Road{name: RandName()}
 	// create the waitgroup so we don't have any timing issues
 	wg := sync.WaitGroup{}
 	// unleash makeroad
@@ -60,5 +69,5 @@ func makeRandomCity(numRoads int) (city *City) {
 	wg.Wait()
 	// and set the named return value
 	city = &City{r}
-	return nil
+	return city
 }
